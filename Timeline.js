@@ -2,10 +2,10 @@
 More information can be found on https://developers.google.com/chart/
 */
 
-// TODO: better do not ship this file, use some node module or so
-//       instead.
-//       or maybe better to just use d3, and remove google dependency?
-var google = require('./google-jsapi.js');
+// FIXME: google chart won't run offline,
+//        plus it is difficult to include it as node module
+//        and then browserify it.
+//        Better switch to other lib for timeline chart.
 
 module.exports = function(options){
   var that = this;
@@ -14,9 +14,8 @@ module.exports = function(options){
   var w = options.width - 100 || 200;
   var h = options.height - 100 || 200;
   var data = options.data || [];
-  var where = options.where;
-  var label = options.label;
   var fontsize = options.fontsize || "12px";
+  this.where = options.where || "body";
   this.label = options.label;
 
   var chart;
@@ -26,8 +25,9 @@ module.exports = function(options){
   }
 
   this.update = function(data) {
-      var container = document.getElementById('chart'); // FIXME: hack
-      chart = new google.visualization.Timeline(container);
+	  
+      var google = window.google;
+      chart = new google.visualization.Timeline($(that.where)[0]);
       dataTable = new google.visualization.DataTable();
       
       dataTable.addColumn({ type: 'string', id: 'Event' });
@@ -45,13 +45,7 @@ module.exports = function(options){
       }
       dataTable.addRows(data_array);
       
-//       var view =  new google.visualization.DataView(dataTable);
-      // TODO: notify someone that action was selected
-//       google.visualization.events.addListener(chart, 'select', function(){
-//       });
-//       chart.draw(view);
-//       var draw_options = {
-//       };
-      chart.draw(dataTable);
+      var view =  new google.visualization.DataView(dataTable);
+      chart.draw(view);
   }
 }
