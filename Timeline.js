@@ -2,7 +2,12 @@
 More information can be found on https://developers.google.com/chart/
 */
 
-function Timeline (options) {
+// TODO: better do not ship this file, use some node module or so
+//       instead.
+//       or maybe better to just use d3, and remove google dependency?
+var google = require('./google-jsapi.js');
+
+module.exports = function(options){
   var that = this;
 
   options = options || {};
@@ -21,7 +26,7 @@ function Timeline (options) {
   }
 
   this.update = function(data) {
-      var container = document.getElementById('chart');
+      var container = document.getElementById('chart'); // FIXME: hack
       chart = new google.visualization.Timeline(container);
       dataTable = new google.visualization.DataTable();
       
@@ -36,22 +41,17 @@ function Timeline (options) {
       {
         var times = data["value2"][i].split("_"); //start and endtimes were concatenated with _
         var cur_array=[data["value1"][i], parseFloat(times[0])*1000, parseFloat(times[1])*1000];
-        data_array.push(cur_array)
-        // alert("inserting" + JSON.stringify(cur_array));
+        data_array.push(cur_array);
       }
-      
       dataTable.addRows(data_array);
-      // alert(JSON.stringify(dataTable));
-      var view =  new google.visualization.DataView(dataTable);
       
-
-      
-      google.visualization.events.addListener(chart, 'select', function(){
-        // TODO: notify someone that action was selected
-      });
-     
-     chart.draw(view);
+//       var view =  new google.visualization.DataView(dataTable);
+      // TODO: notify someone that action was selected
+//       google.visualization.events.addListener(chart, 'select', function(){
+//       });
+//       chart.draw(view);
+//       var draw_options = {
+//       };
+      chart.draw(dataTable);
   }
 }
-
-

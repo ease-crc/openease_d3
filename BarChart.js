@@ -1,4 +1,7 @@
-function BarChart (options) {
+
+var d3 = require('d3');
+
+module.exports = function(options){
   options = options || {};
   var w = options.width - 100 || 200;
   var h = options.height - 100 || 200;
@@ -12,7 +15,6 @@ function BarChart (options) {
   var svg = d3.select(where).append("svg:svg")
     .attr("width", w+100)
     .attr("height", h+100);
-
   svg.append("svg:rect")
     .attr("width", "100%")
     .attr("height", "100%")
@@ -62,7 +64,6 @@ function BarChart (options) {
         .attr("fill", function(d, i) { return color(i); });//"#0a0") // #800
         //.attr("stroke", "#050"); // #800
 
-
     //exit 
     bars.exit()
     .transition()
@@ -70,7 +71,6 @@ function BarChart (options) {
     .ease("exp")
         .attr("width", 0)
         .remove();
-
 
     bars
         .attr("stroke-width", 4)
@@ -83,12 +83,10 @@ function BarChart (options) {
             return "translate(" + [0, y(i)] + ")"
         });
 
-
     var text = vis.selectAll("text.value")
       .data(data.value2)
       .attr("x", 5)//x)
       .attr("y", function(d,i){ return y(i) + y.rangeBand()/2; } );
-
     text
       .enter().append("text")
       .attr("class", "value")
@@ -101,7 +99,6 @@ function BarChart (options) {
 
     text
      .text(function(d,i) {return data.value1[i]});//function(d) { return d; });
-
     text.exit()
       .remove();
 
@@ -109,7 +106,6 @@ function BarChart (options) {
       .data(data.value2)
       .attr("x", 0)//x)
       .attr("y", function(d,i){ return y(i) + y.rangeBand()/2; } );
-
     percent
       .enter().append("text")
       .attr("class", "percent")
@@ -123,7 +119,6 @@ function BarChart (options) {
     percent
 //      .text(function(d,i) {return (100*parseInt(data.value2[i])/sum).toFixed(1) + "%" });
       .text(function(d) { return parseFloat(d).toFixed(2); });
-
     percent.exit()
       .remove();
 
@@ -131,7 +126,6 @@ function BarChart (options) {
       .data([sum]);
       //.attr("x", 5)//x)
       //.attr("y", h+10);//function(d,i){ return y(i) + y.rangeBand()/2; } );
-
     total
       .enter().append("text")
       .attr("class", "total")
@@ -141,13 +135,9 @@ function BarChart (options) {
       .attr("dy", 0)//".36em")
       .attr("text-anchor", "start")
       .style("font-size", fontsize);
-
     total
       .text(this.label + " (total: " + sum + ")");//Total "+sum);//function(d) { return d; });
-
     total.exit()
       .remove();
-
   }
-
 }

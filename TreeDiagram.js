@@ -1,26 +1,11 @@
-function TreeDiagram(options){
+
+var d3 = require('d3');
+
+module.exports = function(options){
   options = options || {};
   var width = options.width || 0;
   var height = options.height || 0;
   var where = options.where;
-  /*var root = {id: options.data.value1[0],
-              parent: "",
-              color: options.data.value1[2],
-              info: options.data.value2} || {};*/
-
-  //var width = 960,
-  //    height = 500;
-
-  //var tree = d3.layout.tree()
-  //    .size([height - 20, width - 20]);
-
-  //var root = {},
-  //var nodes = tree(root);
-
-  //root.parent = root;
-  //root.px = root.y;
-  //root.py = root.x;
-
   var diagonal = d3.svg.diagonal().projection(function(d) { return [d.x, d.y] });
 
   var vis = d3.select(where).append("svg:svg")
@@ -63,14 +48,6 @@ function TreeDiagram(options){
       .attr("height", 0);
     vis.remove();
     d3.select(where).html("");
-    /*vis = d3.select(where).append("svg:svg")
-      .attr("width", width)
-      .attr("height", height);
-   svg = vis
-    .append("svg:g")
-      .attr("transform", "translate(10,10)");
-   node = svg.selectAll(".node"),
-      link = svg.selectAll(".link");*/
   }
 
   this.update = function(data) {
@@ -96,7 +73,6 @@ function TreeDiagram(options){
                 color: data.data[0].color,
                 info: data.data[0].info,
                 tip: data.data[0].tip};
-
     var nodes = tree(root);
 
     root.parent = root;
@@ -104,7 +80,6 @@ function TreeDiagram(options){
     root.py = root.x;
 
     for (var i = 0; i < data.data.length; i++) {
-
       var n = {id: data.data[i].id,
                parent: data.data[i].parent,
                color: data.data[i].color,
@@ -113,25 +88,20 @@ function TreeDiagram(options){
 
       if (nodes.find(function (element, index, array) {
             if(element.id == n.id) {return true} else {return false}
-          }) == -1){//undefined) {
+          }) == -1){
 
-      var p = nodes[nodes.findIndex(function (element, index, array) {
-            if(element.id == n.parent) {return true} else {return false}
-          })|0];
-      if(p == undefined) p = root;
-      if (p.children) p.children.push(n); else p.children = [n];
-      nodes.push(n);
-
-    
+          var p = nodes[nodes.findIndex(function (element, index, array) {
+                if(element.id == n.parent) {return true} else {return false}
+              })|0];
+          if(p == undefined) p = root;
+          if (p.children) p.children.push(n); else p.children = [n];
+          nodes.push(n);
       }
     }
-    //console.log(nodes);
-
+    
     // Recompute the layout and data join.
     node = node.data(tree.nodes(root), function(d) { return d.id; });
     link = link.data(tree.links(nodes), function(d) { return d.source.id + "-" + d.target.id; });
-
-
 
     // Add entering nodes in the parent’s old position.
     var node_ = node.enter().append("svg:circle")
@@ -143,8 +113,6 @@ function TreeDiagram(options){
         .on("click", function(){return})
         .on('mouseover', tip.show)
         .on('mouseout', tip.hide);
-
-    
 
     // Add entering links in the parent’s old position.
     link.enter().insert("svg:path", ".node")
@@ -182,9 +150,5 @@ function TreeDiagram(options){
 
   link.exit()
       .remove();
-
-  
-  //console.log(nodes);
   }
-
 }

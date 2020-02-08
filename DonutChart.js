@@ -1,6 +1,8 @@
 //inspired by http://blog.stephenboak.com/2011/08/07/easy-as-a-pie.html
 
-function DonutChart(options) {
+var d3 = require('d3');
+
+module.exports = function(options){
   options = options || {};
   var w = options.width || 300;
   var h = options.height || 300;
@@ -70,13 +72,6 @@ function DonutChart(options) {
     .attr("fill", "white")
     .attr("r", ir);
 
-  // "TOTAL" LABEL
-  /*var totalLabel = center_group.append("svg:text")
-    .attr("class", "label")
-    .attr("dy", -15)
-    .attr("text-anchor", "middle") // text-align: right
-    .text("TOTAL");*/
-
   //TOTAL TRAFFIC VALUE
   var totalValue = center_group.append("svg:text")
     .attr("class", "total")
@@ -102,9 +97,6 @@ function DonutChart(options) {
   // -----------
 
   this.update = function(data) {
-
-    //console.log(data);
-
     oldPieData = filteredPieData;
     pieData = donut(data.value2);
 
@@ -212,9 +204,7 @@ function DonutChart(options) {
         });
 
       valueLabels.transition().duration(tweenDuration).attrTween("transform", textTween);
-
       valueLabels.exit().remove();
-
 
       //DRAW LABELS WITH ENTITY NAMES
       nameLabels = label_group.selectAll("text.units").data(filteredPieData)
@@ -320,5 +310,4 @@ function pieTween(d, i) {
       return "translate(" + Math.cos(val) * (r+textOffset) + "," + Math.sin(val) * (r+textOffset) + ")";
     };
   }
-
 }

@@ -1,20 +1,22 @@
 
-function DataVisClient(options) {
+var BarChart    = require("./BarChart.js");
+var DonutChart  = require("./DonutChart.js");
+var Timeline    = require("./Timeline.js");
+var TreeDiagram = require("./TreeDiagram.js");
+
+var ROSLIB = require('roslib');
+
+module.exports = function(options) {
   var ros = options.ros;
   var containerId = options.containerId;
   var topic = options.topic;
-  //var width = options.width || 300;
-  //var height = options.height || 300;
-
   var chartHandle = [];
-
   var rosTopic = new ROSLIB.Topic({
     ros : ros,
     name : topic,
     messageType : 'data_vis_msgs/DataVis'
   });
-
-
+  
   rosTopic.subscribe(function(message) {
     $(containerId).change();
     
@@ -114,6 +116,5 @@ function DataVisClient(options) {
         handle.handle.update(message.values[0]);
       }
     }
-    //console.log(chartHandle);
   });
 }
