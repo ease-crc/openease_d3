@@ -1,7 +1,7 @@
 {
   "name": "openease-charts",
   "version": "1.0.0",
-  "description": "Chart visualization library of openEASE",
+  "description": "Chart visualization node module of openEASE",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Warning: no test specified\" && exit 0"
