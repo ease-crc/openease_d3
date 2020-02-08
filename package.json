@@ -1,0 +1,30 @@
+{
+  "name": "openease-data-vis",
+  "version": "1.0.0",
+  "description": "Data visualization interface for openEASE",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Warning: no test specified\" && exit 0",
+    "browserify": "browserify -g browserify-css index.js > openease-data-vis.js",
+    "uglify": "uglifyjs openease-data-vis.js -m -o openease-data-vis-min.js",
+    "build": "npm run browserify && npm run uglify"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ease-crc/openease_d3.git"
+  },
+  "author": "Daniel Beßler",
+  "license": "LGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/ease-crc/openease_d3/issues"
+  },
+  "homepage": "https://github.com/ease-crc/openease_d3#readme",
+  "dependencies": {
+    "uglify-js": "latest",
+    "browserify": "latest",
+    "browserify-css": "latest",
+    "ros3d": "git://github.com/RobotWebTools/ros3djs.git#develop",
+    "d3": "3",
+    "d3-tip": "0.9.1"
+  }
+}
