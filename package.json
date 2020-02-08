@@ -1,5 +1,5 @@
 {
-  "name": "openease-charts",
+  "name": "@openease/charts",
   "version": "1.0.0",
   "description": "Chart visualization node module of openEASE",
   "main": "index.js",
