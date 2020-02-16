@@ -8,7 +8,7 @@ module.exports = function(options){
   var where = options.where;
   var diagonal = d3.svg.diagonal().projection(function(d) { return [d.x, d.y] });
 
-  var vis = d3.select(where).append("svg:svg")
+  var vis = d3.select(where[0]).append("svg:svg")
       .attr("width", width)
       .attr("height", height);
 

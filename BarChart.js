@@ -12,7 +12,7 @@ module.exports = function(options){
   this.label = options.label;
   
     //setup the svg
-  var svg = d3.select(where).append("svg:svg")
+  var svg = d3.select(where[0]).append("svg:svg")
     .attr("width", w+100)
     .attr("height", h+100);
   svg.append("svg:rect")

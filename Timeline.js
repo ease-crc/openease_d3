@@ -15,7 +15,7 @@ module.exports = function(options){
   var h = options.height - 100 || 200;
   var data = options.data || [];
   var fontsize = options.fontsize || "12px";
-  this.where = options.where || "body";
+  this.where = options.where;
   this.label = options.label;
 
   var chart;
@@ -27,7 +27,7 @@ module.exports = function(options){
   this.update = function(data) {
 	  
       var google = window.google;
-      chart = new google.visualization.Timeline($(that.where)[0]);
+      chart = new google.visualization.Timeline(that.where[0]);
       dataTable = new google.visualization.DataTable();
       
       dataTable.addColumn({ type: 'string', id: 'Event' });

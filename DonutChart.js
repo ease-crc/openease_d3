@@ -10,7 +10,7 @@ module.exports = function(options){
   var ir = options.innerRadius || 40;//45
   var textOffset = 14;
   var tweenDuration = 250;
-  var where = options.where || "body";
+  var where = options.where;
   var data = options.data || [];
   var label = options.label || "units";
   var fontsize = options.fontsize || "14px";
@@ -40,7 +40,7 @@ module.exports = function(options){
   // CREATE VIS & GROUPS
   // -------------------
 
-  var vis = d3.select(where).append("svg:svg")
+  var vis = d3.select(where[0]).append("svg:svg")
     .attr("width", w+50)
     .attr("height", h+50);
 
