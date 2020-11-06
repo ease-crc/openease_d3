@@ -31,8 +31,8 @@ module.exports = function(options){
       dataTable = new google.visualization.DataTable();
       
       dataTable.addColumn({ type: 'string', id: 'Event' });
-      dataTable.addColumn({ type: 'number', id: 'Start' });
-      dataTable.addColumn({ type: 'number', id: 'End' });
+      dataTable.addColumn({ type: 'date', id: 'Start' });
+      dataTable.addColumn({ type: 'date', id: 'End' });
       
       // create arrays of data
       // alert("creating data array!" + data[0]["value2"].length);
@@ -40,7 +40,11 @@ module.exports = function(options){
       for(i=0; i<data["value1"].length;i++) //note: should check that value1 and value2 have the same size
       {
         var times = data["value2"][i].split("_"); //start and endtimes were concatenated with _
-        var cur_array=[data["value1"][i], parseFloat(times[0])*1000, parseFloat(times[1])*1000];
+        var cur_array=[
+            data["value1"][i],
+            new Date(parseFloat(times[0])*1000 ),
+            new Date(parseFloat(times[1])*1000 )
+        ];
         data_array.push(cur_array);
       }
       dataTable.addRows(data_array);
