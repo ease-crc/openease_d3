@@ -20,6 +20,13 @@ module.exports = function(options){
 
   var chart;
   var dataTable;
+  var view;
+
+  //redraw graph on window resize
+  $(window).on('resize', function() {
+      chart.draw(view);
+  });
+
   this.remove = function() {
     chart.clearChart();
   }
@@ -49,7 +56,7 @@ module.exports = function(options){
       }
       dataTable.addRows(data_array);
       
-      var view =  new google.visualization.DataView(dataTable);
+      view =  new google.visualization.DataView(dataTable);
       chart.draw(view);
   }
 }
