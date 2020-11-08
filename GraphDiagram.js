@@ -3,8 +3,8 @@ var d3 = require('d3');
 
 module.exports = function(options){
   options = options || {};
-  var w = options.width - 100 || 200;
-  var h = options.height - 100 || 200;
+  var w = options.width || 200;
+  var h = options.height || 200;
   var data = options.data || [];
   var where = options.where;
   var fontsize = options.fontsize || "14px";
@@ -15,16 +15,13 @@ module.exports = function(options){
     .charge(-120)
     .linkDistance(20)
     .gravity(0.9)
-    .size([w,h]);
+    .size([w-50,h-50]);
 
-  var svg = d3.select(where[0]).append("svg")
-    .attr("width", w)
-    .attr("height", h);
-  svg.append("svg:rect")
-    .attr("width", "100%")
-    .attr("height", "100%")
-    //.attr("stroke", "#000")
-    .attr("fill", "none");
+  var svg = d3.select(where[0])
+      .append("svg")
+      .attr("class", "chart")
+      .attr("width", "100%")
+      .attr("height", "100%");
 
   this.remove = function() {
     svg.remove();
@@ -52,7 +49,6 @@ module.exports = function(options){
           "nodes": nodes,
           "links": links
       };
-      console.info(graph);
       force.nodes(graph.nodes)
           .links(graph.links)
           .start();
