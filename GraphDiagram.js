@@ -106,6 +106,8 @@ module.exports = function(options){
         // TODO: also support other distribution of groups (e.g. circular)
         // FIXME: this will break when group id's are not numbered from 1 to n
         //        - instead create a map from group id to x/y
+        // FIXME: this is not entirely accurate for some reason.
+        //         where is (0/0) in the SVG? But well it looks ok like this.
         //
         var div_w = options.where.width();
         var div_h = options.where.height();
@@ -114,8 +116,7 @@ module.exports = function(options){
         // the distance between groups
         var d_x = div_w/that.numGroups;
         // the offset of the first group
-        var pos_x = 0.25*d_x;
-        //var pos_x = 0.5*d_x;
+        var pos_x = 0.5*d_x;
         // finally compute center positions
         this.groupCenter = [];
         for(var i = 0; i < that.numGroups; i++) {
