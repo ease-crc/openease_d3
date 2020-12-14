@@ -75,16 +75,28 @@ module.exports = function(options){
         // estimate height and draw
         that.height = dataTable.getNumberOfRows() * 35 + 35;
         view =  new google.visualization.DataView(dataTable);
+        // add listener to compute height and redraw
+        google.visualization.events.addOneTimeListener(chart, 'ready', that.resizeTimeline);
         that.draw();
-        // compute height and redraw
+    }
+
+    this.resizeTimeline = function() {
         that.computeHeight();
         that.draw();
     }
 
     this.computeHeight = function() {
         var container = that.where[0];
-        var svg = container.getElementsByTagName('svg')[0];
-        var rects = svg.getElementsByTagName('rect');
+        var svgs = container.getElementsByTagName('svg');
+        var rects = svgs[0].getElementsByTagName('rect');
+        if (rects.length < 1) {
+            for (var i = 1; i < svgs.length; i++) {
+                rects = svgs[i].getElementsByTagName('rect');
+                if (rects.length > 0) {
+                    i = svgs.length;
+                }
+            }
+        }
         var maxRectHeight = 10;
         for(var i=0; i < rects.length; i++) {
             if(rects[i].getAttribute) {
