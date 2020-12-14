@@ -4,35 +4,48 @@ var d3 = require('d3');
 module.exports = function(options){
     var that = this;
     options = options || {};
+    // keep track of widget size.
+    // width is set to parent width, and height is dynamically computed in this module.
     var width = options.width || 200;
     var height = options.height || 400;
-    var data = options.data || [];
+    // the parent div
     var where = options.where;
-    var fontsize = options.fontsize || "14px";
+    // coloring of nodes
     var color = d3.scale.category20();
-    var force = d3.layout.force()
-        .charge(-1000)
-        .distance(200)
-        .linkStrength(0.01)
-        // higher positive value means easier repositionning
-        //.friction(0.2)
-        // higher value mean higher attraction to the center of the force layout
-        .gravity(0.1)
-        .size([width-50,height-50]);
+
+    // number of node groups in the graph
+    this.numGroups = 0;
+    // max number of nodes in a group
+    this.maxGroupSize = 0;
+    // group gravity points
+    this.groupCenter = [{x: 0, y: 0}];
+
+    console.info(['graph',width,height]);
+    console.info(['parent',options.where.width(),options.where.height()]);
+
+    $(window).on('resize', function() {
+        console.info(['resize',options.where.width(),options.where.height()]);
+        that.updateGravity();
+    });
+
+    // Create a SVG element. The graph is then added to the SVG.
+    // NOTE: it is perfectly possible to render some custom stuff into this SVG too!
     var svg = d3.select(where[0])
         .append("svg")
         .attr("class", "chart")
         .attr("width", "100%")
         .attr("height", height);
 
-    // appending little triangles, path object, as arrowhead
-    // The <defs> element is used to store graphical objects that will be used at a later time
-    // The <marker> element defines the graphic that is to be used for drawing
-    // arrowheads or polymarkers on a given <path>, <line>, <polyline> or <polygon> element.
+    // Add arrow head shape to SVG.
+    // NOTE: edges are by default undirected. Here we add an arrow head shape
+    // to SVG to use it for edges.
     svg.append('defs').append('marker')
         .attr("id",'arrowhead')
-        .attr('viewBox','-0 -5 10 10') //the bound of the SVG viewport for the current SVG fragment. defines a coordinate system 10 wide and 10 high starting on (0,-5)
-        .attr('refX',19) // x coordinate for the reference point of the marker. If circle is bigger, this need to be bigger.
+        // the bound of the SVG viewport for the current SVG fragment. defines a coordinate
+        // system 10 wide and 10 high starting on (0,-5)
+        .attr('viewBox','-0 -5 10 10')
+        // x coordinate for the reference point of the marker. If circle is bigger, this need to be bigger.
+        .attr('refX',19)
         .attr('refY',0)
         .attr('orient','auto')
         .attr('markerWidth',5)
@@ -43,33 +56,102 @@ module.exports = function(options){
         .attr('fill', '#008bc9')
         .style('stroke','none');
 
+    // Create a force-graph layout where we can add nodes and edges later.
+    // NOTE: this is the API of d3 version 3.
+    //       the force graph stuff looks very different in version 4.
+    var force = d3.layout.force()
+        .charge(-1000)
+        .distance(200)
+        .linkStrength(0.01)
+        // higher positive value means easier repositionning
+        //.friction(0.2)
+        // higher value mean higher attraction to the center of the force layout
+        .gravity(0.1)
+        .size([width-50,height-50]);
+
+    // This is called when the widget should be disposed
     this.remove = function() {
         svg.remove();
     }
 
+    // get some parameters for sizing and positioning.
+    this.updateGroups = function(data) {
+        // - we make height depend on largest group
+        // - the group gravity points need to be computed
+        var groups = {};
+        for(var i = 0; i < data.length; i++) {
+            var nodeData = data[i].value1;
+            var nodeGroup = nodeData[2];
+            if(nodeGroup in groups) {
+                groups[nodeGroup].push(nodeData[0]);
+            }
+            else {
+                groups[nodeGroup] = [nodeData[0]];
+            }
+        }
+        this.numGroups=Object.keys(groups).length;
+        // compute max group size
+        this.maxGroupSize=0;
+        for(var key in groups) {
+            if(groups[key].length > this.maxGroupSize) {
+                this.maxGroupSize = groups[key].length;
+            }
+        }
+    }
+
+    // Compute gravity points for each group.
+    // This is done so groups are separated from each other.
+    // Evenly distribute groups horizontally.
+    this.updateGravity = function() {
+        // TODO: also support other distribution of groups (e.g. circular)
+        // FIXME: this will break when group id's are not numbered from 1 to n
+        //        - instead create a map from group id to x/y
+        //
+        var div_w = options.where.width();
+        var div_h = options.where.height();
+        // the y-coordinate is simply the center
+        var pos_y = 0.5*div_h;
+        // the distance between groups
+        var d_x = div_w/that.numGroups;
+        // the offset of the first group
+        var pos_x = 0.25*d_x;
+        //var pos_x = 0.5*d_x;
+        // finally compute center positions
+        this.groupCenter = [];
+        for(var i = 0; i < that.numGroups; i++) {
+            this.groupCenter.push({x: pos_x, y: pos_y});
+            pos_x += d_x;
+        }
+        console.info(this.groupCenter);
+    }
+
+    // This is called when new data was received
     this.update = function(data) {
+        // size/position computation
+        // TODO: update height based on group size
+        that.updateGroups(data);
+        that.updateGravity();
+
+        // Parse data: get list of nodes and links
         var nodes=[];
         var links=[];
-
-        // FIXME:
-        var foci = [
-            {x: 100, y: 100},
-            {x: 300, y: 100},
-            {x: 500, y: 100},
-            {x: 700, y: 100}
-        ];
-
         for(var i = 0; i < data.length; i++) {
             var nodeData = data[i].value1;
             var group = parseInt(nodeData[2]);
             nodes.push({
                 "name":nodeData[0],
                 "iri":nodeData[1],
-                "cx":foci[group-1].x,
-                "group":group
+                "group":group,
+                // init position and velocity of node.
+                "x":that.groupCenter[group-1].x,
+                "y":Math.random() * height,
+                "vx":0,
+                "vy":0
             });
             var nodeLinks = data[i].value2;
             for(var j = 0; j < nodeLinks.length; j++) {
+                // NOTE: edge data is concatenated into one string "$type_$target",
+                //       and parsed here.
                 var edge_data = nodeLinks[j].split("_");
                 links.push({
                     "source":i,
@@ -78,6 +160,8 @@ module.exports = function(options){
                 });
             }
         }
+
+        // Finally call force.nodes to set up the layout.
         var graph = {
             "nodes": nodes,
             "links": links
@@ -86,21 +170,15 @@ module.exports = function(options){
             .links(graph.links)
             .start();
 
+        // set-up links
         var link = svg.selectAll(".link")
             .data(graph.links)
             .enter().append("line")
             .style("stroke", "#2baeff")
             .attr("class", "link")
-            //.style("stroke-width", function (d) { return Math.sqrt(d.value); })
             .attr('marker-end','url(#arrowhead)');
-        // The <title> element provides an accessible, short-text description of any SVG
-        // container element or graphics element.
-        // Text in a <title> element is not rendered as part of the graphic,
-        // but browsers usually display it as a tooltip.
-        link.append("title")
-            .text(function (d) {return d.type;});
 
-        // edge labels
+        // set-up edge labels
         var edgepaths = svg.selectAll(".edgepath")
             .data(links)
             .enter().append('path')
@@ -127,12 +205,7 @@ module.exports = function(options){
             .attr("startOffset", "50%")
             .text(function (d) {return d.type});
 
-        /*
-        var drag = force.drag()
-            .on('dragstart', function(d) { that.dragstarted(d); })
-            .on('dragend', function() { that.dragged(); });
-
-         */
+        // set-up nodes
         var node = svg.selectAll(".node")
             .data(graph.nodes)
             .enter().append("g")
@@ -141,7 +214,6 @@ module.exports = function(options){
             .attr("cy", function(d) { return d.y; })
             //.call(drag)
             .call(force.drag);
-
         node.append("circle")
             .attr("r", 10)
             .style("fill", function (d) { return color(d.group); });
@@ -155,13 +227,13 @@ module.exports = function(options){
             .text(function (d) { return d.iri; });
 
         force.on("tick", function (e) {
-
+            // pull nodes to their groups
             var k = .1 * e.alpha;
             graph.nodes.forEach(function(o, i) {
-                o.y += (foci[o.group-1].y - o.y) * k;
-                o.x += (foci[o.group-1].x - o.x) * k;
+                o.y += (that.groupCenter[o.group-1].y - o.y) * k;
+                o.x += (that.groupCenter[o.group-1].x - o.x) * k;
             });
-
+            //
             link.attr("x1", function(d) { return d.source.x; })
                 .attr("y1", function(d) { return d.source.y; })
                 .attr("x2", function(d) { return d.target.x; })
@@ -185,22 +257,5 @@ module.exports = function(options){
                 }
             });
         });
-    }
-
-    // When the drag gesture starts, the targeted node is fixed to the pointer
-    // The simulation is temporarily “heated” during interaction by setting the target alpha to a non-zero value.
-    this.dragstarted = function(d) {
-        if (!d3.event.active) {
-            // sets the current target alpha to the specified number in the range [0,1].
-            force.alpha(0.3);
-        }
-        d.fy = d.y;
-        d.fx = d.x;
-    }
-
-    // When the drag gesture starts, the targeted node is fixed to the pointer
-    this.dragged = function(d) {
-        d.fx = d3.event.x;
-        d.fy = d3.event.y;
     }
 }
