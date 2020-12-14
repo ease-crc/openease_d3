@@ -20,11 +20,7 @@ module.exports = function(options){
     // group gravity points
     this.groupCenter = [{x: 0, y: 0}];
 
-    console.info(['graph',width,height]);
-    console.info(['parent',options.where.width(),options.where.height()]);
-
     $(window).on('resize', function() {
-        console.info(['resize',options.where.width(),options.where.height()]);
         that.updateGravity();
     });
 
@@ -123,7 +119,6 @@ module.exports = function(options){
             this.groupCenter.push({x: pos_x, y: pos_y});
             pos_x += d_x;
         }
-        console.info(this.groupCenter);
     }
 
     // This is called when new data was received
