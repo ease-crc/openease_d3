@@ -5,139 +5,145 @@ module.exports = function(options){
   options = options || {};
   var w = options.width - 100 || 200;
   var h = options.height - 100 || 200;
-  var data = options.data || [];
+  var bar_height = 20;
   var where = options.where;
   var fontsize = options.fontsize || "14px";
-
-  this.label = options.label;
-  
-    //setup the svg
-  var svg = d3.select(where[0]).append("svg:svg")
-    .attr("width", w+100)
-    .attr("height", h+100);
-  svg.append("svg:rect")
-    .attr("width", "100%")
-    .attr("height", "100%")
-    //.attr("stroke", "#000")
-    .attr("fill", "none");
-
-  var vis = svg.append("svg:g")
-    //.attr("id", "barchart")
-    .attr("transform", "translate(50,50)");
-
+  var label = options.label;
   var color = d3.scale.category20();
+
+  // setup the svg
+  var svg = d3.select(where[0])
+      .append("svg:svg")
+      .attr("width", w+100)
+      .attr("height", h+100);
+  svg.append("svg:rect")
+      .attr("width", "100%")
+      .attr("height", "100%")
+      //.attr("stroke", "#000")
+      .attr("fill", "none");
+  var vis = svg.append("svg:g")
+      //.attr("id", "barchart")
+      .attr("transform", "translate(50,10)");
 
   this.remove = function() {
     svg.remove();
   }
 
-  this.update = function(data) {
-    max = d3.max(data.value2, function(d) {return parseInt(d)});
-
-    var sum = data.value2.reduce(function(a,b) { return parseInt(a) + parseInt(b) });
-
-    //nice breakdown of d3 scales
-    //http://www.jeromecukier.net/blog/2011/08/11/d3-scales-and-color/
-    x = d3.scale.linear()
+  this.update = function(data_vis) {
+    //
+    var data = [];
+    for(var i=0; i<data_vis.value2.length; ++i) {
+      data.push({
+        key: data_vis.value1[i],
+        value: data_vis.value2[i]
+      })
+    }
+    data.sort(function(a, b) {
+      return b.value - a.value;
+    });
+    var data_keys = data.map(function(d) { return d.key; });
+    var data_values = data.map(function(d) { return d.value; });
+    // get the maximum value
+    var max = d3.max(data_vis.value2, function(d) {return parseInt(d)});
+    // get sum of all values
+    var sum = data_vis.value2.reduce(function(a,b) { return parseInt(a) + parseInt(b) });
+    //
+    var x = d3.scale.linear()
         .domain([0, max])
         .range([0, w]);
+    var y = d3.scale.ordinal()
+        .domain(d3.range(data_keys.length))
+        .rangeBands([0,data_keys.length*bar_height], .2);
+    //
+    svg.attr("height", y(data_keys.length-1) + 40);
 
-    y = d3.scale.ordinal()
-        .domain(d3.range(data.value2.length))
-        .rangeBands([0, h], .2);
-    
-    //a good written tutorial of d3 selections coming from protovis
-    //http://www.jeromecukier.net/blog/2011/08/09/d3-adding-stuff-and-oh-understanding-selections/
+    // Add bars to SVG.
+    // http://www.jeromecukier.net/blog/2011/08/09/d3-adding-stuff-and-oh-understanding-selections/
     var bars = vis.selectAll("rect.bar")
-        .data(data.value2);
-
-    //update
-    bars
-        .attr("fill", function(d, i) { return color(i); });
+        .data(data_values);
+    // update
+    bars.attr("fill", function(d, i) { return color(i); });
         //.attr("stroke", "black")//#050");
         //.attr("stroke-width", 0.1);
-
-    //enter
+    // enter
     bars.enter()
         .append("svg:rect")
         .attr("class", "bar")
-        .attr("fill", function(d, i) { return color(i); });//"#0a0") // #800
-        //.attr("stroke", "#050"); // #800
-
-    //exit 
+        //.attr("stroke", "#050") // #800
+        .attr("fill", function(d, i) { return color(i); });
+    // exit
     bars.exit()
-    .transition()
-    .duration(300)
-    .ease("exp")
+        .transition()
+        .duration(300)
+        .ease("exp")
         .attr("width", 0)
         .remove();
-
-    bars
-        .attr("stroke-width", 4)
-    .transition()
-    .duration(300)
-    .ease("quad")
+    bars.attr("stroke-width", 4)
+        .transition()
+        .duration(300)
+        .ease("quad")
         .attr("width", x)
         .attr("height", y.rangeBand())
         .attr("transform", function(d,i) {
-            return "translate(" + [0, y(i)] + ")"
+          return "translate(" + [0, y(i)] + ")"
         });
 
+    // Add labels to SVG
     var text = vis.selectAll("text.value")
-      .data(data.value2)
-      .attr("x", 5)//x)
-      .attr("y", function(d,i){ return y(i) + y.rangeBand()/2; } );
-    text
-      .enter().append("text")
-      .attr("class", "value")
-      .attr("x", 5)//x)
-      .attr("y", function(d,i){ return y(i) + y.rangeBand()/2; } )
-      //.attr("dx", -5)
-      .attr("dy", ".36em")
-      .attr("text-anchor", "start")
-      .style("font-size", fontsize);
+        .data(data_keys)
+        .attr("x", 5) //x
+        .attr("y", function(d,i){
+          return y(i) + y.rangeBand()/2;
+        } );
+    text.enter()
+        .append("text")
+        .attr("class", "value")
+        .attr("x", 5)//x)
+        .attr("y", function(d,i){
+          return y(i) + y.rangeBand()/2;
+        } )
+        .attr("dy", ".36em")
+        .attr("text-anchor", "start")
+        .style("font-size", fontsize);
+    text.text(function(d,i) {
+      return data_keys[i];
+    });
+    text.exit().remove();
 
-    text
-     .text(function(d,i) {return data.value1[i]});//function(d) { return d; });
-    text.exit()
-      .remove();
-
+    // Add percentage labels left of bars
     var percent = vis.selectAll("text.percent")
-      .data(data.value2)
-      .attr("x", 0)//x)
-      .attr("y", function(d,i){ return y(i) + y.rangeBand()/2; } );
-    percent
-      .enter().append("text")
-      .attr("class", "percent")
-      .attr("x", 0)//x)
-      .attr("y", function(d,i){ return y(i) + y.rangeBand()/2; } )
-      //.attr("dx", -5)
-      .attr("dy", ".36em")
-      .attr("text-anchor", "end")
-      .style("font-size", fontsize);
+        .data(data_values)
+        .attr("x", 0)
+        .attr("y", function(d,i){ return y(i) + y.rangeBand()/2; } );
+    percent.enter()
+        .append("text")
+        .attr("class", "percent")
+        .attr("x", 0)
+        .attr("y", function(d,i){ return y(i) + y.rangeBand()/2; } )
+        .attr("dx", -5)
+        .attr("dy", ".36em")
+        .attr("text-anchor", "end")
+        .style("font-size", fontsize);
+    percent.text(function(d,i) {
+      return (100*parseInt(data_values[i])/sum).toFixed(1) + "%";
+    });
+    percent.exit().remove();
 
-    percent
-//      .text(function(d,i) {return (100*parseInt(data.value2[i])/sum).toFixed(1) + "%" });
-      .text(function(d) { return parseFloat(d).toFixed(2); });
-    percent.exit()
-      .remove();
-
+    // Add bottom label
+    /*
     var total = vis.selectAll("text.total")
-      .data([sum]);
-      //.attr("x", 5)//x)
-      //.attr("y", h+10);//function(d,i){ return y(i) + y.rangeBand()/2; } );
-    total
-      .enter().append("text")
-      .attr("class", "total")
-      .attr("x", 5)//x)
-      .attr("y", h+40)
-      //.attr("dx", -5)
-      .attr("dy", 0)//".36em")
-      .attr("text-anchor", "start")
-      .style("font-size", fontsize);
-    total
-      .text(this.label + " (total: " + sum + ")");//Total "+sum);//function(d) { return d; });
-    total.exit()
-      .remove();
+        .data([sum]);
+    total.enter()
+        .append("text")
+        .attr("class", "total")
+        .attr("x", 5)//x)
+        .attr("y", h+40)
+        //.attr("dx", -5)
+        .attr("dy", 0)//".36em")
+        .attr("text-anchor", "start")
+        .style("font-size", fontsize);
+    total.text(label + " (total: " + sum + ")");
+    total.exit().remove();
+     */
   }
 }
