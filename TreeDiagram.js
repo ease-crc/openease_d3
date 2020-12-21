@@ -43,6 +43,7 @@ module.exports = function(options){
         }
         return {
             "name": nodeData[0],
+            "iri": nodeData[1],
             "children": children
         };
     }
@@ -84,6 +85,13 @@ module.exports = function(options){
             .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
             .text(function(d) { return d.name; })
             .style("fill-opacity", 1e-6);
+
+        // Add callback for doubleclick
+        node.on("dblclick",function(d){ 
+            commandline = ace.edit("user_query");
+            commandline.setValue("A='"+d.iri +"'");
+            page.console.query();
+        });
 
         ////////////////////
         // UPDATE
