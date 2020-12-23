@@ -7,10 +7,11 @@ var GraphDiagram = require("./GraphDiagram.js");
 
 var ROSLIB = require('roslib');
 
-module.exports = function(container, message) {
+module.exports = function(container, message, blackboard) {
     var that = this;
     
     this.options = {
+        blackboard: blackboard,
         data: message.values[0],
         where: container,
         label: message.title,
@@ -26,13 +27,13 @@ module.exports = function(container, message) {
     if(message.type == 0) {
         this.chart_obj = new DonutChart(that.options);
         this.chart_obj.label = message.title;
-        this.chart_obj.update(message.values[0]);
+        this.chart_obj.update(message.values);
     }
     // Bar chart
     else if(message.type == 1) {
         this.chart_obj = new BarChart(that.options);
         this.chart_obj.label = message.title;
-        this.chart_obj.update(message.values[0]);
+        this.chart_obj.update(message.values);
     }
     // Tree diagram
     else if(message.type == 2) {

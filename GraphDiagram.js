@@ -136,7 +136,8 @@ module.exports = function(options){
             var group = parseInt(nodeData[2]);
             nodes.push({
                 "name":nodeData[0],
-                "iri":nodeData[1],
+                "entity":nodeData[1],
+                "entity_type":nodeData[3],
                 "group":group,
                 // init position and velocity of node.
                 "x":that.groupCenter[group-1].x,
@@ -202,6 +203,7 @@ module.exports = function(options){
             .text(function (d) {return d.type});
 
         // set-up nodes
+        var selected = undefined;
         var node = svg.selectAll(".node")
             .data(graph.nodes)
             .enter().append("g")
@@ -212,6 +214,19 @@ module.exports = function(options){
             .call(force.drag);
         node.append("circle")
             .attr("r", 10)
+            .on("click", function(d) {
+                if (d3.event.defaultPrevented) return;
+                // assign 'selected' CSS class to selected node
+                if(selected) {
+                    d3.select(selected).classed("selected", d.selected = false);
+                }
+                d3.select(this).classed("selected", d.selected = true);
+                selected = this;
+                // notify blackboard about selection
+                var entity = d3.select(this)[0][0].__data__.entity;
+                var entity_type = d3.select(this)[0][0].__data__.entity_type;
+                options.blackboard.select(options.label, entity, entity_type);
+            })
             .style("fill", function (d) { return color(d.group); });
         node.append("text")
             .style("text-anchor", "middle")

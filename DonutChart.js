@@ -98,13 +98,15 @@ module.exports = function(options){
 
   this.update = function(data) {
     oldPieData = filteredPieData;
-    pieData = donut(data.value2);
+    //
+    var pie_data = data.map(function(d) { return d.value2[0]; });
+    pieData = donut(pie_data);
 
     var totalElements = 0;
     filteredPieData = pieData.filter(filterData);
     function filterData(element, index, array) {
-      element.name = data.value1[index];
-      element.value = parseInt(data.value2[index]);
+      element.name = data[index].value1[0];
+      element.value = parseInt(data[index].value2[0]);
       totalElements += element.value;
       return (element.value > 0);
     }
@@ -119,13 +121,28 @@ module.exports = function(options){
         return totalElements;
       });
 
+      var selected = undefined;
       //DRAW ARC PATHS
       paths = arc_group.selectAll("path").data(filteredPieData);
       paths.enter().append("svg:path")
-        .attr("stroke", "white")
-        .attr("stroke-width", 0.5)
-        .attr("fill", function(d, i) { return color(i); })
-        .transition()
+          .attr("stroke", "white")
+          .attr("class", "pie-part")
+          .attr("stroke-width", 3.0)
+          .attr("fill", function(d, i) { return color(i); })
+          .on("click", function(d,i) {
+            if (d3.event.defaultPrevented) return;
+            // assign 'selected' CSS class to selected node
+            if(selected) {
+                d3.select(selected).classed("selected", d.selected = false);
+            }
+            d3.select(this).classed("selected", d.selected = true);
+            selected = this;
+            // notify blackboard about selection
+            options.blackboard.select(options.label,
+                data[i].value1[1],
+                data[i].value1[2]);
+          })
+          .transition()
           .duration(tweenDuration)
           .attrTween("d", pieTween);
       paths
