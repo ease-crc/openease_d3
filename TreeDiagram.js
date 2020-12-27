@@ -3,15 +3,12 @@ var d3 = require('d3');
 
 module.exports = function(options){
     options = options || {};
+
     var that = this;
     var where = options.where;
-    var w = options.width - 25 || 200;
-    var h = options.height - 25 || 200;
     var duration = 750;
     var node_id = 0;
 
-    var tree = d3.layout.tree()
-        .size([h,w]);
     var diagonal = d3.svg.diagonal()
         .projection(function(d) { return [d.y, d.x]; });
 
@@ -48,14 +45,43 @@ module.exports = function(options){
         };
     }
 
+    this.getMaxBranching_ = function(node,level,acc_max) {
+        if(!acc_max[level]) {
+            acc_max[level] = 0;
+        }
+        acc_max[level] += node.children.length;
+        for(var i=0; i<node.children.length; i++) {
+            that.getMaxBranching_(node.children[i],level+1,acc_max);
+        }
+    }
+
+    this.getMaxBranching = function(root) {
+        var succ_map={};
+        var succ_max=0;
+        that.getMaxBranching_(root,0,succ_map);
+        for(var index in succ_map) {
+            succ_max = Math.max(succ_max, succ_map[index]);
+        }
+        return succ_max;
+    }
+
     this.update = function(data) {
         that.root = that.getTreeData(data,0);
-        that.root.x0 = h / 2;
-        that.root.y0 = 0;
+        that.maxBranching = that.getMaxBranching(that.root);
         that.update_1(that.root);
     }
 
     this.update_1 = function(source) {
+        // HACK compute height based on max branching in one level of the tree
+        var treeHeight = that.maxBranching*25.0 + 100.0;
+        var treeWidth = where.width();
+        var tree = d3.layout.tree().size([treeHeight,treeWidth]);
+
+        where.height(treeHeight);
+
+        source.x0 = treeHeight / 2;
+        source.y0 = 0;
+
         // Compute the new tree layout.
         var nodes = tree.nodes(that.root).reverse(),
             links = tree.links(nodes);
