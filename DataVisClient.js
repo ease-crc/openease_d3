@@ -9,19 +9,19 @@ var ROSLIB = require('roslib');
 
 module.exports = function(container, message, blackboard) {
     var that = this;
-    
+
+    this.chart_obj = undefined;
     this.options = {
-        blackboard: blackboard,
         data: message.values[0],
         where: container,
         label: message.title,
         width: message.width,
         height: message.height,
-        radius: (message.height-120)/2,//height*3/10,
-        innerRadius: (message.height-120)/2*4/9,
-        fontsize: message.fontsize//"14px"
+        onselect: function(entity_iri,entity_type) {
+            blackboard.select(message.title,
+                entity_iri, entity_type);
+        }
     };
-    this.chart_obj = undefined;
     
     // Pie chart
     if(message.type == 0) {

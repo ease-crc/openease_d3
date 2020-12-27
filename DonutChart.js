@@ -4,16 +4,15 @@ var d3 = require('d3');
 
 module.exports = function(options){
   options = options || {};
-  var w = options.width || 300;
-  var h = options.height || 300;
+
   var r = options.radius || 90;//100
   var ir = options.innerRadius || 40;//45
   var textOffset = 14;
   var tweenDuration = 250;
   var where = options.where;
-  var data = options.data || [];
   var label = options.label || "units";
   var fontsize = options.fontsize || "14px";
+  var pieHeight = r + 200;
 
   //OBJECTS TO BE POPULATED WITH DATA LATER
   var lines, valueLabels, nameLabels;
@@ -41,23 +40,31 @@ module.exports = function(options){
   // -------------------
 
   var vis = d3.select(where[0]).append("svg:svg")
-    .attr("width", w+50)
-    .attr("height", h+50);
+    .attr("width", "100%")
+    .attr("height", pieHeight);
 
   //GROUP FOR ARCS/PATHS
   var arc_group = vis.append("svg:g")
-    .attr("class", "arc")
-    .attr("transform", "translate(" + ((w+50)/2) + "," + ((h+50)/2) + ")");
+    .attr("class", "arc");
 
   //GROUP FOR LABELS
   var label_group = vis.append("svg:g")
-    .attr("class", "label_group")
-    .attr("transform", "translate(" + ((w+50)/2) + "," + ((h+50)/2) + ")");
+    .attr("class", "label_group");
 
   //GROUP FOR CENTER TEXT  
   var center_group = vis.append("svg:g")
-    .attr("class", "center_group")
-    .attr("transform", "translate(" + ((w+50)/2) + "," + ((h+50)/2) + ")");
+    .attr("class", "center_group");
+
+  this.resizePie = function() {
+    var translate = "translate(" +
+        (where.width()/2) + "," +
+        (where.height()/2) + ")";
+    arc_group.attr("transform", translate);
+    label_group.attr("transform", translate);
+    center_group.attr("transform", translate);
+  };
+  this.resizePie();
+  $(window).on('resize', this.resizePie);
 
   //PLACEHOLDER GRAY CIRCLE
   var paths = arc_group.append("svg:circle")
@@ -81,12 +88,14 @@ module.exports = function(options){
     .text("Waiting...");
 
   //UNITS LABEL
+  /*
   var totalUnits = center_group.append("svg:text")
     .attr("class", "units")
-    .attr("dy", h/2-10)//120)//21)
-    .attr("text-anchor", "middle") // text-align: right
+    .attr("dy", (pieHeight/2.0))
+    .attr("text-anchor", "middle")
     .style("font-size", fontsize)
     .text(label);
+   */
 
   // removes this chart
   this.remove = function() {
@@ -138,9 +147,7 @@ module.exports = function(options){
             d3.select(this).classed("selected", d.selected = true);
             selected = this;
             // notify blackboard about selection
-            options.blackboard.select(options.label,
-                data[i].value1[1],
-                data[i].value1[2]);
+            options.onselect(data[i].value1[1], data[i].value1[2]);
           })
           .transition()
           .duration(tweenDuration)

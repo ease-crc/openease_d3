@@ -225,7 +225,7 @@ module.exports = function(options){
                 // notify blackboard about selection
                 var entity = d3.select(this)[0][0].__data__.entity;
                 var entity_type = d3.select(this)[0][0].__data__.entity_type;
-                options.blackboard.select(options.label, entity, entity_type);
+                options.onselect(entity, entity_type);
             })
             .style("fill", function (d) { return color(d.group); });
         node.append("text")

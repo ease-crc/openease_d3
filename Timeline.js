@@ -30,16 +30,16 @@ module.exports = function(options){
     var view;
     var formatDate = new google.visualization.DateFormat({pattern: 'mm:ss'});
 
-    //redraw graph on window resize
+    //
     $(window).on('resize', function() {
-        that.draw();
+        that.resizeTimeline();
     });
 
     google.visualization.events.addListener(chart, 'select', function () {
         var selection = chart.getSelection();
         if (selection.length > 0) {
             var entity = dataTable.getValue(selection[0].row, 3);
-            options.blackboard.selectEvent(options.label,entity);
+            options.onselect(entity,'event');
         }
     });
 
