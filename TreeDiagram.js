@@ -8,6 +8,7 @@ module.exports = function(options){
     var w = options.width - 25 || 200;
     var h = options.height - 25 || 200;
     var duration = 750;
+    var node_id = 0;
 
     var tree = d3.layout.tree()
         .size([h,w]);
@@ -64,7 +65,7 @@ module.exports = function(options){
 
         // Update the nodes…
         var node = svg.selectAll("g.node")
-            .data(nodes, function(d) { return d.id || (d.id = ++i); });
+            .data(nodes, function(d) { return d.id || (d.id = ++node_id); });
 
         // Enter any new nodes at the parent's previous position.
         var nodeEnter = node.enter().append("g")
