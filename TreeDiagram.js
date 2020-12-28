@@ -41,6 +41,8 @@ module.exports = function(options){
         }
         return {
             "name": nodeData[0],
+            "entity_iri": nodeData[1],
+            "entity_type": nodeData[3],
             "children": children
         };
     }
@@ -188,6 +190,7 @@ module.exports = function(options){
             d.children = d._children;
             d._children = null;
         }
+        options.onselect(d.entity_iri, d.entity_type);
         that.update_1(d);
     }
 }
