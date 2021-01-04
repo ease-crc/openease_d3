@@ -4,16 +4,15 @@ var d3 = require('d3');
 
 module.exports = function(options){
   options = options || {};
-  var w = options.width || 300;
-  var h = options.height || 300;
+
   var r = options.radius || 90;//100
   var ir = options.innerRadius || 40;//45
   var textOffset = 14;
   var tweenDuration = 250;
   var where = options.where;
-  var data = options.data || [];
   var label = options.label || "units";
   var fontsize = options.fontsize || "14px";
+  var pieHeight = r + 200;
 
   //OBJECTS TO BE POPULATED WITH DATA LATER
   var lines, valueLabels, nameLabels;
@@ -41,23 +40,31 @@ module.exports = function(options){
   // -------------------
 
   var vis = d3.select(where[0]).append("svg:svg")
-    .attr("width", w+50)
-    .attr("height", h+50);
+    .attr("width", "100%")
+    .attr("height", pieHeight);
 
   //GROUP FOR ARCS/PATHS
   var arc_group = vis.append("svg:g")
-    .attr("class", "arc")
-    .attr("transform", "translate(" + ((w+50)/2) + "," + ((h+50)/2) + ")");
+    .attr("class", "arc");
 
   //GROUP FOR LABELS
   var label_group = vis.append("svg:g")
-    .attr("class", "label_group")
-    .attr("transform", "translate(" + ((w+50)/2) + "," + ((h+50)/2) + ")");
+    .attr("class", "label_group");
 
   //GROUP FOR CENTER TEXT  
   var center_group = vis.append("svg:g")
-    .attr("class", "center_group")
-    .attr("transform", "translate(" + ((w+50)/2) + "," + ((h+50)/2) + ")");
+    .attr("class", "center_group");
+
+  this.resizePie = function() {
+    var translate = "translate(" +
+        (where.width()/2) + "," +
+        (where.height()/2) + ")";
+    arc_group.attr("transform", translate);
+    label_group.attr("transform", translate);
+    center_group.attr("transform", translate);
+  };
+  this.resizePie();
+  $(window).on('resize', this.resizePie);
 
   //PLACEHOLDER GRAY CIRCLE
   var paths = arc_group.append("svg:circle")
@@ -81,12 +88,14 @@ module.exports = function(options){
     .text("Waiting...");
 
   //UNITS LABEL
+  /*
   var totalUnits = center_group.append("svg:text")
     .attr("class", "units")
-    .attr("dy", h/2-10)//120)//21)
-    .attr("text-anchor", "middle") // text-align: right
+    .attr("dy", (pieHeight/2.0))
+    .attr("text-anchor", "middle")
     .style("font-size", fontsize)
     .text(label);
+   */
 
   // removes this chart
   this.remove = function() {
@@ -98,13 +107,15 @@ module.exports = function(options){
 
   this.update = function(data) {
     oldPieData = filteredPieData;
-    pieData = donut(data.value2);
+    //
+    var pie_data = data.map(function(d) { return d.value2[0]; });
+    pieData = donut(pie_data);
 
     var totalElements = 0;
     filteredPieData = pieData.filter(filterData);
     function filterData(element, index, array) {
-      element.name = data.value1[index];
-      element.value = parseInt(data.value2[index]);
+      element.name = data[index].value1[0];
+      element.value = parseInt(data[index].value2[0]);
       totalElements += element.value;
       return (element.value > 0);
     }
@@ -119,13 +130,26 @@ module.exports = function(options){
         return totalElements;
       });
 
+      var selected = undefined;
       //DRAW ARC PATHS
       paths = arc_group.selectAll("path").data(filteredPieData);
       paths.enter().append("svg:path")
-        .attr("stroke", "white")
-        .attr("stroke-width", 0.5)
-        .attr("fill", function(d, i) { return color(i); })
-        .transition()
+          .attr("stroke", "white")
+          .attr("class", "pie-part")
+          .attr("stroke-width", 3.0)
+          .attr("fill", function(d, i) { return color(i); })
+          .on("click", function(d,i) {
+            if (d3.event.defaultPrevented) return;
+            // assign 'selected' CSS class to selected node
+            if(selected) {
+                d3.select(selected).classed("selected", d.selected = false);
+            }
+            d3.select(this).classed("selected", d.selected = true);
+            selected = this;
+            // notify blackboard about selection
+            options.onselect(data[i].value1[1], data[i].value1[2]);
+          })
+          .transition()
           .duration(tweenDuration)
           .attrTween("d", pieTween);
       paths

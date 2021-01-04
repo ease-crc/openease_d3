@@ -25,13 +25,22 @@ module.exports = function(options){
     dataTable.addColumn({ type: 'string', id: 'Event' });
     dataTable.addColumn({ type: 'date', id: 'Start' });
     dataTable.addColumn({ type: 'date', id: 'End' });
+    dataTable.addColumn({ type: 'string', id: 'IRI' });
 
     var view;
     var formatDate = new google.visualization.DateFormat({pattern: 'mm:ss'});
 
-    //redraw graph on window resize
+    //
     $(window).on('resize', function() {
-        that.draw();
+        that.resizeTimeline();
+    });
+
+    google.visualization.events.addListener(chart, 'select', function () {
+        var selection = chart.getSelection();
+        if (selection.length > 0) {
+            var entity = dataTable.getValue(selection[0].row, 3);
+            options.onselect(entity,'event');
+        }
     });
 
     this.draw = function() {
@@ -56,12 +65,13 @@ module.exports = function(options){
 
     this.update = function(data) {
         var data_array = [];
-        for(i=0; i<data["value1"].length;i++) {
+        for(var i=0; i<data["value1"].length/2; i++) {
             var times = data["value2"][i].split("_");
             var cur_array=[
-                data["value1"][i],
+                data["value1"][i*2 + 1],
                 new Date(parseFloat(times[0])*1000 ),
-                new Date(parseFloat(times[1])*1000 )
+                new Date(parseFloat(times[1])*1000 ),
+                data["value1"][i*2]
             ];
             data_array.push(cur_array);
         }
@@ -75,6 +85,7 @@ module.exports = function(options){
         // estimate height and draw
         that.height = dataTable.getNumberOfRows() * 35 + 35;
         view =  new google.visualization.DataView(dataTable);
+        view.setColumns([0,1,2]);
         // add listener to compute height and redraw
         google.visualization.events.addOneTimeListener(chart, 'ready', that.resizeTimeline);
         that.draw();
