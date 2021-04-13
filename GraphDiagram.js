@@ -236,6 +236,12 @@ module.exports = function(options){
             .text(function(d) { return d.name });
         node.append("title")
             .text(function (d) { return d.iri; });
+        node.on("dblclick",function(d){ 
+            commandline = ace.edit("user_query");
+            commandline.setValue("A='"+d.iri +"'");
+            page.console.query();
+        });
+
 
         force.on("tick", function (e) {
             // pull nodes to their groups

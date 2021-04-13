@@ -114,6 +114,13 @@ module.exports = function(options){
             .text(function(d) { return d.name; })
             .style("fill-opacity", 1e-6);
 
+        // Add callback for doubleclick
+        node.on("dblclick",function(d){ 
+            commandline = ace.edit("user_query");
+            commandline.setValue("A='"+d.entity_iri +"'");
+            page.console.query();
+        });
+
         ////////////////////
         // UPDATE
         ////////////////////
