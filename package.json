@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/ease-crc/openease_d3#readme",
   "dependencies": {
-    "ros3d": "git://github.com/RobotWebTools/ros3djs.git#develop",
+    "ros3d": "https://github.com/RobotWebTools/ros3djs.git#develop",
     "d3": "3",
     "d3-tip": "0.9.1"
   }
