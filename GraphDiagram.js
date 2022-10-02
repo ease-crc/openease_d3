@@ -8,6 +8,8 @@ module.exports = function(options){
     // width is set to parent width, and height is dynamically computed in this module.
     var width = options.width || 200;
     var height = options.height || 400;
+    var ySpacing = 48;
+    var nodeRadius = 10;
     // the parent div
     var where = options.where;
     // coloring of nodes
@@ -30,7 +32,7 @@ module.exports = function(options){
         .append("svg")
         .attr("class", "chart")
         .attr("width", "100%")
-        .attr("height", height);
+        .attr("height", "100%");
 
     // Add arrow head shape to SVG.
     // NOTE: edges are by default undirected. Here we add an arrow head shape
@@ -60,10 +62,10 @@ module.exports = function(options){
         .distance(200)
         .linkStrength(0.01)
         // higher positive value means easier repositionning
-        //.friction(0.2)
+        .friction(0.9)
         // higher value mean higher attraction to the center of the force layout
         .gravity(0.1)
-        .size([width-50,height-50]);
+        .size([width,height]);
 
     // This is called when the widget should be disposed
     this.remove = function() {
@@ -102,13 +104,11 @@ module.exports = function(options){
         // TODO: also support other distribution of groups (e.g. circular)
         // FIXME: this will break when group id's are not numbered from 1 to n
         //        - instead create a map from group id to x/y
-        // FIXME: this is not entirely accurate for some reason.
-        //         where is (0/0) in the SVG? But well it looks ok like this.
-        //
         var div_w = options.where.width();
-        var div_h = options.where.height();
+        //var div_h = options.where.height();
         // the y-coordinate is simply the center
-        var pos_y = 0.5*div_h;
+        var bbox = svg.node().getBBox();
+        var pos_y = 0.5*ySpacing + 0.5*bbox.height;
         // the distance between groups
         var d_x = div_w/that.numGroups;
         // the offset of the first group
@@ -120,13 +120,25 @@ module.exports = function(options){
             pos_x += d_x;
         }
     }
+    
+    // update height based on SVG bounding box
+    this.isStable = false;
+    this.updateHeight = function() {
+        // once stable, do not update height anymore
+        if(that.isStable) return;
+        // update height
+        var bbox = svg.node().getBBox();
+        var tickHeight = ySpacing + bbox.y + bbox.height;
+        options.where.height(tickHeight);
+        force.size([options.where.width(), tickHeight]);
+        that.updateGravity();
+    }
 
     // This is called when new data was received
     this.update = function(data) {
-        // size/position computation
-        // TODO: update height based on group size
         that.updateGroups(data);
         that.updateGravity();
+        that.isStable = false;
 
         // Parse data: get list of nodes and links
         var nodes=[];
@@ -213,7 +225,7 @@ module.exports = function(options){
             //.call(drag)
             .call(force.drag);
         node.append("circle")
-            .attr("r", 10)
+            .attr("r", nodeRadius)
             .on("click", function(d) {
                 if (d3.event.defaultPrevented) return;
                 // assign 'selected' CSS class to selected node
@@ -241,8 +253,11 @@ module.exports = function(options){
             commandline.setValue("A='"+d.iri +"'");
             page.console.query();
         });
-
-
+        
+        force.on("end", function (e) {
+            // set stable flag to true once the simulation has stopped for the first time
+            that.isStable = true;
+        });
         force.on("tick", function (e) {
             // pull nodes to their groups
             var k = .1 * e.alpha;
@@ -255,8 +270,9 @@ module.exports = function(options){
                 .attr("y1", function(d) { return d.source.y; })
                 .attr("x2", function(d) { return d.target.x; })
                 .attr("y2", function(d) { return d.target.y; });
-            node.attr("cx", function (d) { return d.x; })
-                .attr("cy", function (d) { return d.y; });
+            // constrains the nodes to be within a box
+            node.attr("cx", function(d) { return d.x = Math.max(nodeRadius, Math.min(options.where.width() - nodeRadius, d.x)); })
+                .attr("cy", function(d) { return d.y = Math.max(nodeRadius, Math.min(options.where.height() - nodeRadius, d.y)); }); 
             node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
             // handle edge labels
             edgepaths.attr('d', function (d) {
@@ -273,6 +289,7 @@ module.exports = function(options){
                     return 'rotate(0)';
                 }
             });
+            that.updateHeight();
         });
     }
 }
